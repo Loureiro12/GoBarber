@@ -1,9 +1,9 @@
-import React, { useRef, useCallback } from "react";
+import React, { useCallback, useRef } from "react";
 import { FiLogIn, FiMail, FiLock } from "react-icons/fi";
-import { Form } from "@unform/web";
 import { FormHandles } from "@unform/core";
+import { Form } from "@unform/web";
 import * as Yup from "yup";
-import { Link } from "react-router-dom";
+import { Link, useHistory } from "react-router-dom";
 
 import { useAuth } from "../../hooks/Auth";
 import { useToast } from "../../hooks/toast";
@@ -27,6 +27,8 @@ const SignIn: React.FC = () => {
   const { signIn } = useAuth();
   const { addToast } = useToast();
 
+  const history = useHistory();
+
   const handleSubmit = useCallback(
     async (data: SignInFormData) => {
       try {
@@ -34,8 +36,8 @@ const SignIn: React.FC = () => {
 
         const schema = Yup.object().shape({
           email: Yup.string()
-            .required("E-mail obrigatório")
-            .email("Digite um e-mail válido"),
+            .email("Digite um e-mail válido")
+            .required("E-mail obrigatório"),
           password: Yup.string().required("Senha obrigatória"),
         });
 
@@ -47,22 +49,27 @@ const SignIn: React.FC = () => {
           email: data.email,
           password: data.password,
         });
+
+        history.push("/dashboard");
       } catch (err) {
         if (err instanceof Yup.ValidationError) {
           const errors = getValidationErrors(err);
 
           formRef.current?.setErrors(errors);
+
+          return;
         }
 
         addToast({
           type: "error",
-          title: "Error na autenticação",
-          description: "Ocorreu um erro as fazer login, cheque as credenciais",
+          title: "Erro na autenticação",
+          description: "Ocorreu um erro ao fazer login, cheque as credenciais.",
         });
       }
     },
-    [signIn, addToast]
+    [signIn, addToast, history]
   );
+
   return (
     <Container>
       <Content>
@@ -73,11 +80,17 @@ const SignIn: React.FC = () => {
             <h1>Faça seu logon</h1>
 
             <Input name="email" icon={FiMail} placeholder="E-mail" />
-            <Input name="password" icon={FiLock} placeholder="Senha" />
+
+            <Input
+              name="password"
+              icon={FiLock}
+              type="password"
+              placeholder="Senha"
+            />
 
             <Button type="submit">Entrar</Button>
 
-            <a href="">Esqueci minha senha</a>
+            <a href="forgot">Esqueci minha senha</a>
           </Form>
 
           <Link to="/signup">
@@ -86,6 +99,7 @@ const SignIn: React.FC = () => {
           </Link>
         </AnimationContainer>
       </Content>
+
       <Background />
     </Container>
   );
